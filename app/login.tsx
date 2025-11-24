@@ -5,12 +5,12 @@ import { Icon } from '@/components/ui/icon';
 import { Input } from "@/components/ui/input";
 import { Text } from '@/components/ui/text';
 import { useSupabase } from "@/context/SupabaseContext";
-import { Link, Redirect, Stack, useRouter } from 'expo-router';
+import { Link, Stack } from 'expo-router';
 import { MoonStarIcon, StarIcon, SunIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, type ImageStyle, View } from 'react-native';
+import { useState } from "react";
+import { Image, type ImageStyle, TextInput, View } from 'react-native';
 
 const LOGO = {
     light: require('@/assets/images/react-native-reusables-light.png'),
@@ -28,14 +28,42 @@ const IMAGE_STYLE: ImageStyle = {
     width: 76,
 };
 
+interface AlertViewProps {
+    text: string
+}
+
 export default function Screen() {
     const { colorScheme } = useColorScheme();
-    const { session, initializing} = useSupabase();
-    const router = useRouter();
+
+    const { login } = useSupabase();
+
+    const [email, setEmail] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+
+    const handleLogin = async() => {
+        try {
+            await login(email, password);
+        } catch (e) {
+            alert(e);
+        }
+    }
 
     return (
-            <ActivityIndicator animating={true}/>
-        )
+        <>
+            <Stack.Screen options={SCREEN_OPTIONS} />
+            <View className="flex-1 items-center justify-center p-8 gap-2">
+                
+                <Text>Email: </Text>
+                <Input inputMode="email" value={email} onChangeText={(email) => setEmail(email)}/ >
+
+                <Text>Password</Text>
+                <Input secureTextEntry={true} value={password} onChangeText={(password) => setPassword(password)}/ >
+
+
+                <Button onPress={handleLogin}><Text>Login</Text></Button>
+            </View>
+        </>
+    );
 }
 
 const THEME_ICONS = {

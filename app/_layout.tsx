@@ -1,3 +1,4 @@
+import SupabaseProvider from "@/context/SupabaseContext";
 import '@/global.css';
 
 import { NAV_THEME } from '@/lib/theme';
@@ -16,10 +17,12 @@ export default function RootLayout() {
   const { colorScheme } = useColorScheme();
 
   return (
-    <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      <Stack />
-      <PortalHost />
-    </ThemeProvider>
+    <SupabaseProvider>
+        <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        <Stack />
+        <PortalHost />
+        </ThemeProvider>
+    </SupabaseProvider>
   );
 }
