@@ -1,4 +1,6 @@
+import { Database } from "@/database.types";
 import { supabase } from "@/lib/supabase";
+import { AddLandmark, Landmark } from "@/types";
 import { useRoute } from "@react-navigation/native";
 import { Session } from "@supabase/supabase-js";
 import { useRouter } from "expo-router";
@@ -10,6 +12,11 @@ interface SupabaseContextType {
     logout: () => Promise<void>;
     loggingIn: boolean;
     initializing: boolean;
+    landmarks: Landmark[],
+    loading: boolean;
+    error: Error | null;
+    addLandmark: (landmark: AddLandmark) => Promise<void>,
+    register: (email: string, password: string) => Promise<void>
 }
 
 const SupabaseContext = createContext<SupabaseContextType>({
@@ -17,13 +24,24 @@ const SupabaseContext = createContext<SupabaseContextType>({
     login: async(email: string, password: string) => {},
     logout: async() => {},
     loggingIn: false,
-    initializing: false
+    initializing: false,
+    landmarks: [],
+    loading: false,
+    error: null,
+    addLandmark: async(landmark: AddLandmark) => {},
+    register: async(email,password) => {}
 });
 
 const SupabaseProvider = ({children} : { children: ReactNode}) => {
     const [session, setSession] = useState<Session | null>(null);
     const [loggingIn, setLoggingIn] = useState<boolean>(false);
     const [initializing, setInitializing] = useState<boolean>(true);
+
+    const [landmarks, setLandmarks] = useState<Landmark[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<Error | null>(null);
+    const [trigger, setTrigger] = useState<number>(0);
+
     const router = useRouter();
     
     useEffect(() => {
@@ -65,6 +83,58 @@ const SupabaseProvider = ({children} : { children: ReactNode}) => {
         }
     }, []);
 
+
+    useEffect(() => {
+        let cancelled = false;
+        const fetchLandmarks = async() => {
+            setError(null);
+            try {
+                setLoading(true);
+                const {data, error} = await supabase.from("landmarks").select("*");
+
+                if (error) {
+                    throw error;
+                }
+                if (cancelled) return;
+                setLandmarks(data);
+
+            } catch (e) {
+                console.error(e);
+                setError(e as Error);
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchLandmarks();
+
+
+        return () => {
+            cancelled = true;
+        }
+    },[trigger]);
+
+    const addLandmark = async(landmark: AddLandmark) => {
+        try {
+            const { error } = await supabase.from("landmarks").insert(landmark);
+            if (error) {
+                throw error;
+            }
+            setTrigger(trigger => trigger + 1);
+        } catch (e) {
+            console.error(e);
+            throw e;
+        }
+    }
+
+    const register = async(email: string, password: string) => {
+        try {
+            await supabase.auth.signUp({email, password});
+        } catch (e) {
+            console.error(e);
+            throw e;
+        }
+    }
+
     const login = async(email: string, password: string) => {
         setLoggingIn(true);
         try {
@@ -88,7 +158,7 @@ const SupabaseProvider = ({children} : { children: ReactNode}) => {
     }
 
     return (
-        <SupabaseContext.Provider value={{initializing, session, loggingIn, login, logout}}>
+        <SupabaseContext.Provider value={{register, initializing, session, loggingIn, login, logout, landmarks, loading, error, addLandmark}}>
             {children}
         </SupabaseContext.Provider>
     )

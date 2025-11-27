@@ -18,23 +18,47 @@ export type Database = {
         Row: {
           created_at: string
           id: number
-          label: string | null
-          latitude: number | null
-          longitude: number | null
+          label: string
+          latitude: number
+          longitude: number
         }
         Insert: {
           created_at?: string
           id?: number
-          label?: string | null
-          latitude?: number | null
-          longitude?: number | null
+          label?: string
+          latitude: number
+          longitude: number
         }
         Update: {
           created_at?: string
           id?: number
-          label?: string | null
-          latitude?: number | null
-          longitude?: number | null
+          label?: string
+          latitude?: number
+          longitude?: number
+        }
+        Relationships: []
+      }
+      restaurants: {
+        Row: {
+          created_at: string
+          id: number
+          latitude: number
+          longitude: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          latitude: number
+          longitude: number
+          title?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          latitude?: number
+          longitude?: number
+          title?: string
         }
         Relationships: []
       }

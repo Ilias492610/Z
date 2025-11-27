@@ -5,7 +5,7 @@ import { Icon } from '@/components/ui/icon';
 import { Input } from "@/components/ui/input";
 import { Text } from '@/components/ui/text';
 import { useSupabase } from "@/context/SupabaseContext";
-import { Link, Stack } from 'expo-router';
+import { Link, Stack, useRouter } from 'expo-router';
 import { MoonStarIcon, StarIcon, SunIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
@@ -40,12 +40,18 @@ export default function Screen() {
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
 
+    const router = useRouter();
+
     const handleLogin = async() => {
         try {
             await login(email, password);
         } catch (e) {
             alert(e);
         }
+    }
+
+    const handleRegister = () => {
+        router.push("/register");
     }
 
     return (
@@ -61,6 +67,7 @@ export default function Screen() {
 
 
                 <Button onPress={handleLogin}><Text>Login</Text></Button>
+                <Button onPress={handleRegister}><Text>Register</Text></Button>
             </View>
         </>
     );
