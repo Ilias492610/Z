@@ -1,60 +1,42 @@
-# Z - Twitter Clone App
+# Z
 
-Een moderne Twitter clone applicatie gebouwd met React Native en Expo.
+Kleine Twitter/X-clone als mobiele app (React Native + Expo Router).
 
-## 📱 Over het Project
-
-Z is een social media applicatie geïnspireerd op Twitter, waarbij gebruikers tweets kunnen plaatsen, profielen kunnen bekijken en met elkaar kunnen communiceren. De app is gebouwd met moderne technologieën en biedt een vloeiende gebruikerservaring op zowel iOS als Android.
-
-## 🚀 Technologieën
-
-- **React Native** - Cross-platform mobile development
-- **Expo** - Development framework en tools
-- **Supabase** - Backend en authenticatie
-- **NativeWind** - Tailwind CSS voor React Native
-- **TypeScript** - Type-safe development
-- **Expo Router** - File-based routing
-
-## ✨ Functionaliteiten
-
-- 🔐 Gebruikersauthenticatie (login/registratie)
-- 📝 Tweets plaatsen en bekijken
-- 👤 Gebruikersprofielen
-- 🔍 Zoekfunctionaliteit
-- 📱 Responsief design
-- 🎨 Modern UI met Tailwind styling
-
-## 🛠️ Installatie
+## Installeren en starten
 
 ```bash
-# Installeer dependencies
 npm install
-
-# Start de development server
 npm run dev
-
-# Voor specifieke platforms
-npm run ios
-npm run android
-npm run web
 ```
 
-## 📋 Vereisten
+## Wat is geïmplementeerd
 
-- Node.js (versie 18 of hoger)
-- npm of yarn
-- Expo Go app (voor testen op fysieke apparaten)
-- Supabase account en configuratie
+- Navigatie met tabs: `app/dashboard/_layout.tsx`
+- Feed met tweets + “compose” knop: `app/dashboard/index.tsx`
+- Tweet maken met ImagePicker, Camera en Notifications: `app/dashboard/create.tsx`
+- Zoeken/sorteren/paginatie: `app/dashboard/search.tsx`
+- Profiel bekijken en aanpassen (naam/handle/bio/avatar/banner) via Supabase: `app/dashboard/profile.tsx`
+- Andere profielen bekijken via handle: `app/dashboard/user/[handle].tsx`
+- Login/registratie met Supabase + Google login: `app/login.tsx`, `app/register.tsx`
 
-## 🔧 Configuratie
+## Wat (nog) niet geïmplementeerd is
 
-Maak een `.env` bestand aan in de root directory met je Supabase credentials:
+- Likes/dislikes opslaan in de backend (knoppen zijn enkel UI): `components/tweet-card.tsx`
+- Tweets opslaan in Supabase (tweets komen nu van de Sample APIs)
+
+## Belangrijke files (kort uitgelegd)
+
+- `context/SupabaseContext.tsx`: Supabase auth (session, login/register, Google OAuth).
+- `context/TwitterContext.tsx`: Sample APIs token opslaan + tweets/profiles ophalen + tweet posten.
+- `lib/twitter.ts`: fetch calls naar `https://sampleapis.assimilate.be/twitter/...`.
+- `lib/supabase.ts`: Supabase client (AsyncStorage session).
+- `app/auth/callback.tsx`: redirect scherm na OAuth/email redirect (nodig voor login flow).
+
+## Configuratie
+
+In `.env`:
 
 ```
-EXPO_PUBLIC_SUPABASE_URL=jouw_supabase_url
-EXPO_PUBLIC_SUPABASE_ANON_KEY=jouw_supabase_anon_key
+EXPO_PUBLIC_SUPABASE_URL=...
+EXPO_PUBLIC_SUPABASE_ANON_KEY=...
 ```
-
-## 📄 Licentie
-
-Dit project is ontwikkeld voor educatieve doeleinden.
