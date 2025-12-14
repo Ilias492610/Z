@@ -7,64 +7,87 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
-      landmarks: {
+      profiles: {
         Row: {
+          avatar_url: string | null
+          banner_url: string | null
+          bio: string | null
           created_at: string
-          id: number
-          label: string
-          latitude: number
-          longitude: number
+          handle: string
+          name: string
+          updated_at: string
+          user_id: string
         }
         Insert: {
+          avatar_url?: string | null
+          banner_url?: string | null
+          bio?: string | null
           created_at?: string
-          id?: number
-          label?: string
-          latitude: number
-          longitude: number
+          handle: string
+          name: string
+          updated_at?: string
+          user_id: string
         }
         Update: {
+          avatar_url?: string | null
+          banner_url?: string | null
+          bio?: string | null
           created_at?: string
-          id?: number
-          label?: string
-          latitude?: number
-          longitude?: number
+          handle?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
-      restaurants: {
+      tweets: {
         Row: {
           created_at: string
           id: number
-          latitude: number
-          longitude: number
-          title: string
+          image_url: string | null
+          text: string
+          updated_at: string
+          user_id: string
         }
         Insert: {
           created_at?: string
           id?: number
-          latitude: number
-          longitude: number
-          title?: string
+          image_url?: string | null
+          text: string
+          updated_at?: string
+          user_id: string
         }
         Update: {
           created_at?: string
           id?: number
-          latitude?: number
-          longitude?: number
-          title?: string
+          image_url?: string | null
+          text?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      feed_tweets: {
+        Row: {
+          avatar_url: string | null
+          banner_url: string | null
+          created_at: string | null
+          handle: string | null
+          id: number | null
+          image_url: string | null
+          name: string | null
+          text: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

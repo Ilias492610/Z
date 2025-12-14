@@ -1,79 +1,172 @@
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { useState } from "react";
-import { useSupabase } from "@/context/SupabaseContext";
+import { useTwitter } from "@/context/TwitterContext";
+import { Redirect, Stack } from "expo-router";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
+import * as Notifications from "expo-notifications";
+import React, { useEffect, useRef, useState } from "react";
+import { Image, Platform, ScrollView, View } from "react-native";
+import { CameraIcon, ImagePlusIcon } from "lucide-react-native";
 
-const CreateLandmarkScreen = () => {
-    const { addLandmark } = useSupabase();
+const CreateTweetScreen = () => {
+    const { publishTweet, token } = useTwitter();
+    const [, requestCameraPermission] = useCameraPermissions();
+    const [, requestMediaPermission] = ImagePicker.useMediaLibraryPermissions();
 
-    const [label, setLabel] = useState("");
-    const [latitude, setLatitude] = useState<string>("");
-    const [longitude, setLongitude] = useState<string>("");
+    const cameraRef = useRef<CameraView>(null);
 
-    const add = async() => {
+    const [text, setText] = useState("");
+    const [imageUri, setImageUri] = useState<string | null>(null);
+    const [sending, setSending] = useState(false);
+    const [showCamera, setShowCamera] = useState(false);
 
-        const latitudeParsed = parseFloat(latitude.replace(",", "."));
-        const longitudeParsed = parseFloat(longitude.replace(",", "."));
-
-        if (isNaN(latitudeParsed)) {
-            alert("Latitude should be a number");
-            return;
+    useEffect(() => {
+        Notifications.requestPermissionsAsync().catch(() => {});
+        if (Platform.OS === "android") {
+            Notifications.setNotificationChannelAsync("default", {
+                name: "default",
+                importance: Notifications.AndroidImportance.DEFAULT,
+            }).catch(() => {});
         }
-        if (isNaN(longitudeParsed)) {
-            alert("Longitude should be a number");
-            return;
+    }, []);
+
+    const pickImage = async () => {
+        const permission = await requestMediaPermission();
+        if (!permission?.granted) {
+            const retry = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!retry.granted) return;
         }
 
-        // Extra validatie komt hier...
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ["images"] as any,
+            quality: 0.5,
+        });
 
-
-        try {
-            await addLandmark({label, latitude: latitudeParsed, longitude: longitudeParsed})
-            alert("Landmark added");
-        } catch (e : any) {
-            console.log(e);
-            alert(e.message);
+        if (!result.canceled) {
+            setImageUri(result.assets[0]?.uri ?? null);
         }
+    };
+
+    const openCamera = async () => {
+        const permission = await requestCameraPermission();
+        if (!permission?.granted) {
+            const retry = await requestCameraPermission();
+            if (!retry?.granted) return;
+        }
+        setShowCamera(true);
+    };
+
+    const takePhoto = async () => {
+        if (!cameraRef.current) return;
+        const photo = await cameraRef.current.takePictureAsync();
+        setImageUri(photo.uri);
+        setShowCamera(false);
+    };
+
+    const handlePublish = async () => {
+        if (!text.trim()) return;
+
+        setSending(true);
+        await publishTweet({ text, image: imageUri });
+        await Notifications.scheduleNotificationAsync({
+            content: {
+                title: "Tweet sent",
+                body: "Your post is live in the feed.",
+                sound: true,
+            },
+            trigger:
+                Platform.OS === "android"
+                    ? {
+                          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+                          channelId: "default",
+                          seconds: 1,
+                          repeats: false,
+                      }
+                    : { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 1, repeats: false },
+        }).catch(() => {});
+        setText("");
+        setImageUri(null);
+        setSending(false);
+    };
+
+    if (!token) {
+        return <Redirect href="/" />;
     }
 
     return (
-        <View className="flex items-center p-4">
-            <Card className="w-full max-w-sm">
-                <CardHeader className="flex-row">
-                    <View className="flex-1 gap-1.5">
-                        <CardTitle>Add new landmark</CardTitle>
-                        <CardDescription>Fill in the details below to add a new landmark. </CardDescription>
-                    </View>
-                </CardHeader>
-                <CardContent>
-                    <View className="w-full justify-center gap-4">
+        <>
+            <Stack.Screen options={{ title: "Tweet" }} />
+            <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: 32, gap: 12 }}>
+                <Card className="w-full">
+                    <CardHeader>
+                        <CardTitle>Create a tweet</CardTitle>
+                        <CardDescription>Share an update and attach a photo if you want.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="gap-4">
                         <View className="gap-2">
-                            <Label htmlFor="label">Label</Label>
-                            <Input value={label} onChangeText={(l) => setLabel(l)} id="label" placeholder="Landmark label" />
+                            <Label htmlFor="tweet">What’s happening?</Label>
+                            <Input
+                                id="tweet"
+                                value={text}
+                                onChangeText={setText}
+                                placeholder="Share something with your followers..."
+                                className="h-32"
+                                multiline
+                                numberOfLines={4}
+                                textAlignVertical="top"
+                            />
                         </View>
-                        <View className="gap-2">
-                            <Label htmlFor="latitude">Latitude</Label>
-                            <Input value={latitude} onChangeText={(l) => setLatitude(l)} inputMode="decimal" id="latitude" placeholder="51.3344" />
-                        </View>
-                        <View className="gap-2">
-                            <Label htmlFor="longitude">Longitude</Label>
-                            <Input value={longitude} onChangeText={(l) => setLongitude(l)} inputMode="decimal" id="longitude" placeholder="4.2222" />
-                        </View>
-                    </View>
-                </CardContent>
-                <CardFooter className="flex-col gap-2">
-                    <Button className="w-full" onPress={add}>
-                        <Text>Add</Text>
-                    </Button>
 
-                </CardFooter>
-            </Card>
-        </View>
-    )
-}
+                        <View className="flex-row gap-2">
+                            <Button variant="outline" onPress={pickImage} className="flex-1">
+                                <Icon as={ImagePlusIcon} className="size-4 text-foreground" />
+                                <Text>Add photo</Text>
+                            </Button>
+                            <Button variant="outline" onPress={openCamera} className="flex-1">
+                                <Icon as={CameraIcon} className="size-4 text-foreground" />
+                                <Text>Camera</Text>
+                            </Button>
+                            {imageUri ? (
+                                <Button variant="ghost" onPress={() => setImageUri(null)}>
+                                    <Text>Remove</Text>
+                                </Button>
+                            ) : null}
+                        </View>
 
-export default CreateLandmarkScreen;
+                        {showCamera ? (
+                            <View className="h-72 overflow-hidden rounded-lg border border-border">
+                                <CameraView ref={cameraRef} className="flex-1" facing="back" />
+                                <View className="flex-row justify-between bg-background/80 p-2">
+                                    <Button onPress={() => setShowCamera(false)} variant="ghost">
+                                        <Text>Close</Text>
+                                    </Button>
+                                    <Button onPress={takePhoto}>
+                                        <Text>Take photo</Text>
+                                    </Button>
+                                </View>
+                            </View>
+                        ) : null}
+
+                        {imageUri ? (
+                            <View className="overflow-hidden rounded-lg border border-border">
+                                <Image source={{ uri: imageUri }} className="h-64 w-full" resizeMode="cover" />
+                            </View>
+                        ) : null}
+                    </CardContent>
+                    <CardFooter className="flex-col gap-2">
+                        <Button className="w-full" onPress={handlePublish} disabled={sending}>
+                            <Text>{sending ? "Posting..." : "Post tweet"}</Text>
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </ScrollView>
+        </>
+    );
+};
+
+export default CreateTweetScreen;
